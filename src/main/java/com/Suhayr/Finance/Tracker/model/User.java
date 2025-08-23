@@ -6,9 +6,8 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -18,7 +17,7 @@ import java.util.List;
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
     @Column(unique = true, nullable = false)
     private String username;
@@ -30,9 +29,9 @@ public class User implements UserDetails {
     @Column(name = "verification_code")
     private String verificationCode;
     @Column(name = "verification_expiration")
-    private Date verificationExpiresAt;
+    private LocalDateTime verificationExpiresAt;
 
-    public User(String password, String email, String username) {
+    public User(String username, String email, String password) {
         this.password = password;
         this.email = email;
         this.username = username;
@@ -47,14 +46,6 @@ public class User implements UserDetails {
         return List.of();
     }
 
-    @Override
-    public String getUsername() {
-        return username;
-    }
-    @Override
-    public String getPassword() {
-        return password;
-    }
     @Override
     public boolean isAccountNonExpired() {
         return true;
