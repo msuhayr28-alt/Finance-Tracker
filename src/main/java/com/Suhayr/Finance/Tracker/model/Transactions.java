@@ -31,6 +31,7 @@ public class Transactions {
 
     private String description;
 
-    @Column(name = "transaction_date")
-    private LocalDateTime transactionDate = LocalDateTime.now();
+    @Column(name = "transaction_date", insertable = false, updatable = false)
+    private LocalDateTime transactionDate;
+
 }

@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "categories")
@@ -22,9 +23,9 @@ public class Categories {
 
     // Optional: list of transactions for bidirectional mapping
     @OneToMany(mappedBy = "category")
-    private List<Transactions> transactions;
+    private Set<Transactions> transactions = new HashSet<>();
 
     @OneToMany(mappedBy = "category")
-    private List<Budget> budgets;
+    private Set<Budget> budgets = new HashSet<>();
 
 }
