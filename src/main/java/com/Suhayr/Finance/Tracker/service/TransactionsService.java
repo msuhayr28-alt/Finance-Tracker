@@ -42,6 +42,9 @@ public class TransactionsService {
     }
 
     public void deleteTransaction(Long id){
+        if (!transactionsRepository.existsById(id)) {
+            throw new RuntimeException("Transaction not found");
+        }
         transactionsRepository.deleteById(id);
     }
 }
