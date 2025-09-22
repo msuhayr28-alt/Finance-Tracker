@@ -46,4 +46,8 @@ public class BudgetService {
         }
         budgetRepository.deleteById(id);
     }
+    public Optional<Budget> getBudgetById(Long id) {
+        return budgetRepository.findById(id);
+    }
+
 }
