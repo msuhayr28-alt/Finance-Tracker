@@ -1,5 +1,7 @@
 package com.Suhayr.Finance.Tracker.controller;
 
+import com.Suhayr.Finance.Tracker.dto.BudgetDTO;
+import com.Suhayr.Finance.Tracker.dto.BudgetRequest;
 import com.Suhayr.Finance.Tracker.model.Budget;
 import com.Suhayr.Finance.Tracker.model.Categories;
 import com.Suhayr.Finance.Tracker.model.User;
@@ -10,7 +12,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/budgets")
@@ -24,80 +25,53 @@ public class BudgetController {
         this.categoriesService = categoriesService;
     }
 
-
     @PostMapping
-    public ResponseEntity<Budget> setBudget(@RequestParam String categoryName,
-                                            @RequestParam Double amount,
-                                            @RequestParam Integer month,
-                                            @RequestParam Integer year){
-
+    public ResponseEntity<BudgetDTO> createBudget(@RequestBody BudgetRequest request) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        Categories categories = categoriesService.findByName(categoryName)
+        Categories category = categoriesService.findByName(request.getCategoryName())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
+
         Budget budget = new Budget();
         budget.setUser(user);
-        budget.setCategory(categories);
-        budget.setAmount(amount);
-        budget.setMonth(month);
-        budget.setYear(year);
-        return ResponseEntity.ok(budgetService.setBudget(budget));
+        budget.setCategory(category);
+        budget.setAmount(request.getAmount());
+        budget.setMonth(request.getMonth());
+        budget.setYear(request.getYear());
+
+        return ResponseEntity.ok(budgetService.createBudget(budget));
     }
 
     @GetMapping
-    public ResponseEntity<List<Budget>> getUserBudgets(){
+    public ResponseEntity<List<BudgetDTO>> getBudgets() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(budgetService.getUserBudget(user.getId()));
+        return ResponseEntity.ok(budgetService.getUserBudgets(user.getId()));
     }
 
     @GetMapping("category/{categoryName}")
-    public ResponseEntity<Budget> getBudgetForMonth(
+    public ResponseEntity<BudgetDTO> getBudgetForMonth(
             @PathVariable String categoryName,
             @RequestParam Integer month,
-            @RequestParam Integer year){
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            @RequestParam Integer year) {
 
-        Categories categories = categoriesService.findByName(categoryName)
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Categories category = categoriesService.findByName(categoryName)
                 .orElseThrow(() -> new RuntimeException("Category not found"));
-        Optional<Budget> budget = budgetService.getBudgetForMonth(user.getId(), categories.getId(), month, year);
-        return budget.map(ResponseEntity::ok)
+
+        return budgetService.getBudgetForMonth(user.getId(), category.getId(), month, year)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
     @PutMapping("/{id}")
-    public ResponseEntity<Budget> updateBudget(@PathVariable Long id, @RequestBody Budget budgetDetails){
+    public ResponseEntity<BudgetDTO> updateBudget(@PathVariable Long id, @RequestBody BudgetDTO budgetDTO) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        Budget existingBudget = budgetService.getBudgetById(id)
-                .orElseThrow(() -> new RuntimeException("Budget not found"));
-
-        if(!existingBudget.getUser().getId().equals(user.getId())){
-            return ResponseEntity.status(403).build();
-        }
-        existingBudget.setAmount(budgetDetails.getAmount());
-        existingBudget.setMonth(budgetDetails.getMonth());
-        existingBudget.setYear(budgetDetails.getYear());
-
-        if(budgetDetails.getCategory() != null){
-            Categories categories = categoriesService.findByName(budgetDetails.getCategory().getName())
-                    .orElseThrow(() -> new RuntimeException("Category not found"));
-            existingBudget.setCategory(categories);
-        }
-        Budget updatedBudget = budgetService.updateBudget(id, existingBudget);
-        return ResponseEntity.ok(updatedBudget);
+        return ResponseEntity.ok(budgetService.updateBudget(id, budgetDTO, user));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBudget(@PathVariable Long id){
+    public ResponseEntity<Void> deleteBudget(@PathVariable Long id) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        Budget budget = budgetService.getBudgetById(id)
-                        .orElseThrow(() -> new RuntimeException("Budget not found"));
-        if(!budget.getUser().getId().equals(user.getId())){
-            return ResponseEntity.status(403).build();
-        }
-        budgetService.deleteBudget(id);
+        budgetService.deleteBudget(id, user);
         return ResponseEntity.noContent().build();
     }
 }
