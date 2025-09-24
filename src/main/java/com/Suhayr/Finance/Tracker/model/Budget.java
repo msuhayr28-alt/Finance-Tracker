@@ -9,8 +9,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "budgets")
-@NoArgsConstructor
+@Table(
+        name = "budgets",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"user_id", "category_id", "month", "year"})
+        }
+)@NoArgsConstructor
 @AllArgsConstructor
 public class Budget {
     @Id

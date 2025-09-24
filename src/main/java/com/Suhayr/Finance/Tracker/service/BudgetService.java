@@ -32,6 +32,24 @@ public class BudgetService {
     }
 
     public BudgetDTO createBudget(Budget budget) {
+        Optional<Budget> existing = budgetRepository.findByUserIdAndCategoryIdAndMonthAndYear(
+                budget.getUser().getId(),
+                budget.getCategory().getId(),
+                budget.getMonth(),
+                budget.getYear()
+        );
+        if (existing.isPresent()) {
+            throw new RuntimeException("Budget already exists for this category and month");
+        }
+        Categories category = categoriesService.findByName(budget.getCategory().getName())
+                .orElseGet(() -> {
+                    Categories newCategory = new Categories();
+                    newCategory.setName(budget.getCategory().getName());
+                    return categoriesService.addCategory(newCategory);
+                });
+
+        budget.setCategory(category);
+
         return toDTO(budgetRepository.save(budget));
     }
 

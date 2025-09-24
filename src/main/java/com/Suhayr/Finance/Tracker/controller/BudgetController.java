@@ -26,20 +26,23 @@ public class BudgetController {
     }
 
     @PostMapping
-    public ResponseEntity<BudgetDTO> createBudget(@RequestBody BudgetRequest request) {
+    public ResponseEntity<BudgetDTO> setBudget(@RequestBody BudgetRequest budgetRequest) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Categories category = categoriesService.findByName(request.getCategoryName())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
 
         Budget budget = new Budget();
         budget.setUser(user);
+
+        Categories category = new Categories();
+        category.setName(budgetRequest.getCategoryName());
         budget.setCategory(category);
-        budget.setAmount(request.getAmount());
-        budget.setMonth(request.getMonth());
-        budget.setYear(request.getYear());
+
+        budget.setAmount(budgetRequest.getAmount());
+        budget.setMonth(budgetRequest.getMonth());
+        budget.setYear(budgetRequest.getYear());
 
         return ResponseEntity.ok(budgetService.createBudget(budget));
     }
+
 
     @GetMapping
     public ResponseEntity<List<BudgetDTO>> getBudgets() {

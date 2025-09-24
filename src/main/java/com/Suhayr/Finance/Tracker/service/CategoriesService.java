@@ -19,6 +19,12 @@ public class CategoriesService {
     public Categories addCategory(Categories category){
         return categoriesRepository.save(category);
     }
+    public Categories createCategory(String name) {
+        Categories category = new Categories();
+        category.setName(name);
+        return categoriesRepository.save(category);
+    }
+
 
     public List<Categories> getAllCategories(){
         return categoriesRepository.findAll();
