@@ -2,7 +2,9 @@ package com.Suhayr.Finance.Tracker.controller;
 
 import com.Suhayr.Finance.Tracker.dto.TransactionDTO;
 import com.Suhayr.Finance.Tracker.dto.TransactionRequest;
+import com.Suhayr.Finance.Tracker.model.Categories;
 import com.Suhayr.Finance.Tracker.model.User;
+import com.Suhayr.Finance.Tracker.service.CategoriesService;
 import com.Suhayr.Finance.Tracker.service.TransactionsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,9 +17,11 @@ import java.util.List;
 public class TransactionsController {
 
     private final TransactionsService transactionService;
+    private final CategoriesService categoriesService;
 
-    public TransactionsController(TransactionsService transactionService) {
+    public TransactionsController(TransactionsService transactionService, CategoriesService categoriesService) {
         this.transactionService = transactionService;
+        this.categoriesService = categoriesService;
     }
 
     @PostMapping
@@ -31,13 +35,14 @@ public class TransactionsController {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(transactionService.getUserTransactions(user.getId()));
     }
-    @GetMapping("/category/{categoryId}")
+    @GetMapping("/transactions/{categoryName}")
     public ResponseEntity<List<TransactionDTO>> getTransactionsByCategory(
-            @PathVariable Long categoryId) {
+            @PathVariable String categoryName) {
 
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        List<TransactionDTO> transactions = transactionService.getUserTransactionByCategory(user.getId(), categoryId);
+        Categories category = categoriesService.findByName(categoryName)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        List<TransactionDTO> transactions = transactionService.getUserTransactionByCategory(user.getId(), category.getId());
 
         return ResponseEntity.ok(transactions);
     }
