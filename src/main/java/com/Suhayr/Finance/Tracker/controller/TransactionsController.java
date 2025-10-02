@@ -4,6 +4,7 @@ import com.Suhayr.Finance.Tracker.dto.TransactionDTO;
 import com.Suhayr.Finance.Tracker.dto.TransactionRequest;
 import com.Suhayr.Finance.Tracker.model.Categories;
 import com.Suhayr.Finance.Tracker.model.User;
+import com.Suhayr.Finance.Tracker.responses.ApiResponse;
 import com.Suhayr.Finance.Tracker.service.CategoriesService;
 import com.Suhayr.Finance.Tracker.service.TransactionsService;
 import org.springframework.http.ResponseEntity;
@@ -25,18 +26,20 @@ public class TransactionsController {
     }
 
     @PostMapping
-    public ResponseEntity<TransactionDTO> createTransaction(@RequestBody TransactionRequest request) {
+    public ResponseEntity<ApiResponse<TransactionDTO>> createTransaction(@RequestBody TransactionRequest request) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(transactionService.addTransaction(request, user));
+        TransactionDTO created = transactionService.addTransaction(request, user);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Transactions created successfully", created));
     }
 
     @GetMapping
-    public ResponseEntity<List<TransactionDTO>> getUserTransactions() {
+    public ResponseEntity<ApiResponse<List<TransactionDTO>>> getUserTransactions() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(transactionService.getUserTransactions(user.getId()));
+        List<TransactionDTO> fetchedTransaction = transactionService.getUserTransactions(user.getId());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Transaction retrieved successfully", fetchedTransaction));
     }
-    @GetMapping("/transactions/{categoryName}")
-    public ResponseEntity<List<TransactionDTO>> getTransactionsByCategory(
+    @GetMapping("/category/{categoryName}")
+    public ResponseEntity<ApiResponse<List<TransactionDTO>>> getTransactionsByCategory(
             @PathVariable String categoryName) {
 
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -44,29 +47,31 @@ public class TransactionsController {
                 .orElseThrow(() -> new RuntimeException("Category not found"));
         List<TransactionDTO> transactions = transactionService.getUserTransactionByCategory(user.getId(), category.getId());
 
-        return ResponseEntity.ok(transactions);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Transaction retrieved successfully", transactions));
     }
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<TransactionDTO> getTransactionById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<TransactionDTO>> getTransactionById(@PathVariable Long id) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return transactionService.getTransactionById(id, user.getId())
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(transaction -> ResponseEntity.ok(new ApiResponse<>(true, "Transaction retrieved successfully", transaction)))
+                .orElse(ResponseEntity.status(404)
+                        .body(new ApiResponse<>(false, "Transaction not found with ID" + id, null)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TransactionDTO> updateTransaction(@PathVariable Long id, @RequestBody TransactionRequest request) {
+    public ResponseEntity<ApiResponse<TransactionDTO>> updateTransaction(@PathVariable Long id, @RequestBody TransactionRequest request) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(transactionService.updateTransaction(id, request, user));
+        TransactionDTO updated = transactionService.updateTransaction(id, request, user);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Transaction updated successfully", updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteTransaction(@PathVariable Long id) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         transactionService.deleteTransaction(id, user);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Transaction deleted successfully", null));
     }
 }
 

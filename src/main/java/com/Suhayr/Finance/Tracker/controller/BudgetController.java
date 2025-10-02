@@ -5,6 +5,7 @@ import com.Suhayr.Finance.Tracker.dto.BudgetRequest;
 import com.Suhayr.Finance.Tracker.model.Budget;
 import com.Suhayr.Finance.Tracker.model.Categories;
 import com.Suhayr.Finance.Tracker.model.User;
+import com.Suhayr.Finance.Tracker.responses.ApiResponse;
 import com.Suhayr.Finance.Tracker.service.BudgetService;
 import com.Suhayr.Finance.Tracker.service.CategoriesService;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class BudgetController {
     }
 
     @PostMapping
-    public ResponseEntity<BudgetDTO> setBudget(@RequestBody BudgetRequest budgetRequest) {
+    public ResponseEntity<ApiResponse<BudgetDTO>> setBudget(@RequestBody BudgetRequest budgetRequest) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         Budget budget = new Budget();
@@ -40,18 +41,20 @@ public class BudgetController {
         budget.setMonth(budgetRequest.getMonth());
         budget.setYear(budgetRequest.getYear());
 
-        return ResponseEntity.ok(budgetService.createBudget(budget));
+        BudgetDTO created = budgetService.createBudget(budget);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Budget created successfully", created));
     }
 
 
     @GetMapping
-    public ResponseEntity<List<BudgetDTO>> getBudgets() {
+    public ResponseEntity<ApiResponse<List<BudgetDTO>>> getBudgets() {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(budgetService.getUserBudgets(user.getId()));
+        List<BudgetDTO> budgets = budgetService.getUserBudgets(user.getId());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Budget retrieved successfully", budgets));
     }
 
     @GetMapping("category/{categoryName}")
-    public ResponseEntity<BudgetDTO> getBudgetForMonth(
+    public ResponseEntity<ApiResponse<BudgetDTO>> getBudgetForMonth(
             @PathVariable String categoryName,
             @RequestParam Integer month,
             @RequestParam Integer year) {
@@ -61,20 +64,21 @@ public class BudgetController {
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
         return budgetService.getBudgetForMonth(user.getId(), category.getId(), month, year)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(budget -> ResponseEntity.ok(new ApiResponse<>(true, "Budget retrieved successfully", budget)))
+                .orElse(ResponseEntity.status(404).body(new ApiResponse<>(false, "Budget not found", null)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BudgetDTO> updateBudget(@PathVariable Long id, @RequestBody BudgetDTO budgetDTO) {
+    public ResponseEntity<ApiResponse<BudgetDTO>> updateBudget(@PathVariable Long id, @RequestBody BudgetDTO budgetDTO) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(budgetService.updateBudget(id, budgetDTO, user));
+        BudgetDTO updated = budgetService.updateBudget(id, budgetDTO, user);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Budget updated successfully", updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBudget(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteBudget(@PathVariable Long id) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         budgetService.deleteBudget(id, user);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Budget deleted successfully", null));
     }
 }
