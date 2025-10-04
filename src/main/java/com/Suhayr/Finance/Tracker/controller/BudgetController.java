@@ -8,6 +8,7 @@ import com.Suhayr.Finance.Tracker.model.User;
 import com.Suhayr.Finance.Tracker.responses.ApiResponse;
 import com.Suhayr.Finance.Tracker.service.BudgetService;
 import com.Suhayr.Finance.Tracker.service.CategoriesService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class BudgetController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<BudgetDTO>> setBudget(@RequestBody BudgetRequest budgetRequest) {
+    public ResponseEntity<ApiResponse<BudgetDTO>> setBudget(@Valid  @RequestBody BudgetRequest budgetRequest) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         Budget budget = new Budget();

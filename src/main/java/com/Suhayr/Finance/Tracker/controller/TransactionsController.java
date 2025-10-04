@@ -7,6 +7,7 @@ import com.Suhayr.Finance.Tracker.model.User;
 import com.Suhayr.Finance.Tracker.responses.ApiResponse;
 import com.Suhayr.Finance.Tracker.service.CategoriesService;
 import com.Suhayr.Finance.Tracker.service.TransactionsService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class TransactionsController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<TransactionDTO>> createTransaction(@RequestBody TransactionRequest request) {
+    public ResponseEntity<ApiResponse<TransactionDTO>> createTransaction(@Valid  @RequestBody TransactionRequest request) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         TransactionDTO created = transactionService.addTransaction(request, user);
         return ResponseEntity.ok(new ApiResponse<>(true, "Transactions created successfully", created));
